@@ -1,11 +1,9 @@
 #pragma once
 #include<stdio.h>
 #include<stdlib.h>
+#include<Windows.h>
 #define MAX_STACK_SIZE 100
 
-
-
-typedef int boolean; //∫“≈∏¿‘
 typedef struct _element {
 	int x;
 	int y;
