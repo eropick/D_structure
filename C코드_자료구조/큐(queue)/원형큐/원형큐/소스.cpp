@@ -4,20 +4,20 @@
 #include<string.h>
 #include<ctype.h>
 #include<Windows.h>
-#define MAX_SIZE 5
+#define MAX_SIZE 60
 
-typedef int element; //요소 타입이 정수형
+typedef struct _element {
+	int id; //id
+	int arrival_time; //도착시간
+	int service_time; //서비스시간
+}element;
 typedef struct _Queue {
-	int front;
-	int rear;
-	int count; //요소의 숫자
+	int front; //전단
+	int rear; //후단
+	int count; //요소갯수
 	element data[MAX_SIZE];
 }QueueType;
 
-//선형큐와 원형큐 초기 값은 -1과 0으로 각각 다르지만
-//front가 가리키는 값은 맨 앞 요소의 전, rear가 가리키는 값은 삽입한 요소로 동일하고
-//삭제반환을 할 때에는 요소를 1증가시키고 반환, 삽입을 할 때에는 요소를 1증가시키고 삽입으로 동일하다.
-//다만, 다시 초기로 돌려줘야 하기 때문에 modula연산이 필요하다.
 
 void error(const char* str); //에러 메시지 출력 후 프로세스 종료.
 void init_Queue(QueueType* q); //Q를 초기화 해준다.
@@ -26,26 +26,21 @@ element dequeue(QueueType* q); //맨 앞에 있는 요소를 빼고 값 반환
 element peek(QueueType* q); //맨 앞에 있는 값 반환.
 boolean is_empty(QueueType* q); //공백상태확인
 boolean is_full(QueueType* q); //포화상태 확인 
-boolean is_full2(QueueType* q); 
+void Queue_print(QueueType* q); //원형큐 출력함수
+int get_count(QueueType* q); //요소의 개수반환
 //포화상태를 count요소가 max_size와 동일하고 rear와 front가 같다면 포화상태로 인정한다.
 //대신 count를 enque나 deque때 가감연산을 해줘야한다.
 
 //원형큐 
 //size 5 => 0,1,2,3,4 다음 5가 나오면 0으로 감.
 
-int main(int argc, char* argv[]) {
-	QueueType q;
-	init_Queue(&q);
-	enqueue(&q, 1);
-	enqueue(&q, 2);
-	enqueue(&q, 3);
-	enqueue(&q, 4);
-	//포화상태 오류 enqueue(&q, 5); 
-	printf("%d\n", dequeue(&q));
-	printf("%d\n", dequeue(&q));
-	printf("%d\n", dequeue(&q));
-	printf("%d\n", dequeue(&q));
-	//공백상태 오류 printf("%d\n", dequeue(&q));
+int main(int argc,char* argv[]) {
+	QueueType* q = (QueueType*)malloc(sizeof(QueueType));
+	init_Queue(q);
+	enqueue(q,{3,4,5});
+	enqueue(q, { 5,6,7 });
+	printf("요소의 개수: %d\n",get_count(q));
+	free(q);
 	return 0;
 }
 
@@ -55,17 +50,12 @@ void init_Queue(QueueType* q) {
 	q->count = 0;
 }
 
-boolean is_full(QueueType* q) { 
-	return (q->rear + 1) % MAX_SIZE == q->front;  //rear 다음이 front랑 같은지 판단해서 반환
-}
-
-boolean is_full2(QueueType* q) {
-	return is_empty(q) && (q->count == MAX_SIZE); //front와 rear의 위치가 같고 count가 MAX_SIZE인지 판단해서 반환
+boolean is_full(QueueType* q) {
+	return (q->count == MAX_SIZE) && (q->rear == q->front);  //요소 개수가 MAX_SIZE이고 두 값이 같다면 포화
 }
 
 boolean is_empty(QueueType* q) { //공백상태
-	if (q->front == q->rear) return true;
-	else return false;
+	return (q->count == 0) && (q->rear == q->front); //요소 개수가 0이고 두 값이 같다면 공백
 }
 
 
@@ -79,7 +69,7 @@ void enqueue(QueueType* q, element item) {
 }
 
 element dequeue(QueueType* q) {
-	int item;
+	element item;
 	if (is_empty(q)) error("큐가 공백상태입니다.");
 	else {
 		q->front = (q->front + 1) % MAX_SIZE;
@@ -90,9 +80,9 @@ element dequeue(QueueType* q) {
 }
 
 element peek(QueueType* q) {
-	int item;
+	element item;
 	if (is_empty(q)) error("큐가 공백상태입니다.");
-	else item = q->data[(q->front + 1)%MAX_SIZE]; //단순히 +1만해서 반환한다.
+	else item = q->data[(q->front + 1) % MAX_SIZE]; //단순히 +1만해서 반환한다.
 	return item;
 }
 
@@ -101,4 +91,18 @@ void error(const char* str) {
 	exit(1);
 }
 
+void Queue_print(QueueType* q) {
+	printf("Deque(front: %d, rear: %d ) Data = ", q->front, q->rear);
+	if (!is_empty(q)) {
+		int i = q->front; //front값 넣음.
+		do {
+			i = (i + 1) % MAX_SIZE; //front에서 1증가 요소
+			printf("(%d %d %d)|", q->data[i].id,q->data[i].arrival_time,q->data[i].service_time);
+		} while (i != q->rear); //i가 rear에 도착하면 반복종료
+	}
+	printf("\n");
+}
 
+int get_count(QueueType* q) {
+	return q->count;
+}
